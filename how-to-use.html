@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to use – Prototype Prompt Builder</title>
+<style>
+  :root{
+    --background:#ffffff; --foreground:#09090b; --card:#ffffff;
+    --muted:#f4f4f5; --muted-foreground:#71717a; --border:#e4e4e7; --ring:#18181b;
+    --primary:#18181b; --primary-foreground:#fafafa; --secondary:#f4f4f5; --accent:#f4f4f5;
+    --good:#15803d; --good-bg:#f0fdf4; --bad:#b91c1c; --bad-bg:#fef2f2;
+    --radius:0.5rem;
+  }
+  .dark{
+    --background:#09090b; --foreground:#fafafa; --card:#0c0c0e;
+    --muted:#27272a; --muted-foreground:#a1a1aa; --border:#27272a; --ring:#d4d4d8;
+    --primary:#fafafa; --primary-foreground:#18181b; --secondary:#27272a; --accent:#27272a;
+    --good:#4ade80; --good-bg:#052e16; --bad:#f87171; --bad-bg:#450a0a;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:70px}
+  body{margin:0;background:var(--background);color:var(--foreground);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--background);z-index:5}
+  .bar{max-width:1100px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+  .logo{width:28px;height:28px;border-radius:6px;background:var(--primary);color:var(--primary-foreground);
+    display:grid;place-items:center;font-weight:700;font-size:13px}
+  .bar h1{font-size:15px;font-weight:600;margin:0}
+  .spacer{flex:1}
+  .btn{font:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);padding:6px 12px;cursor:pointer;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;text-decoration:none;outline:none}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground)}
+  .btn-outline{background:var(--background);border-color:var(--border);color:var(--foreground)}
+  .btn-outline:hover{background:var(--accent)}
+  .btn:focus-visible,summary:focus-visible,a:focus-visible{box-shadow:0 0 0 2px var(--background),0 0 0 4px var(--ring)}
+
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 60px;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:start}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}nav.toc{position:static!important}}
+  nav.toc{position:sticky;top:76px;font-size:13px}
+  nav.toc p{font-weight:600;margin:0 0 8px}
+  nav.toc a{display:block;padding:4px 10px;border-radius:6px;color:var(--muted-foreground);text-decoration:none}
+  nav.toc a:hover{background:var(--accent);color:var(--foreground)}
+  nav.toc .sub{padding-left:22px}
+
+  h2{font-size:30px;letter-spacing:-.02em;margin:0 0 6px}
+  .lead{color:var(--muted-foreground);margin:0 0 24px;font-size:16px}
+  section{margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:calc(var(--radius) + 4px);
+    padding:20px 22px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .card h3{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:10px}
+  .card h4{margin:18px 0 6px;font-size:14px}
+  .card p{margin:6px 0}
+  .card ul,.card ol{margin:6px 0;padding-left:20px}
+  .card li{margin:3px 0}
+  .muted{color:var(--muted-foreground)}
+  .step{width:24px;height:24px;border-radius:999px;background:var(--secondary);font-size:12px;flex:none;
+    display:grid;place-items:center;font-weight:600;border:1px solid var(--border)}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;
+    border:1px solid var(--border);background:var(--secondary)}
+  .alert{border:1px solid var(--border);border-left:4px solid var(--foreground);border-radius:var(--radius);
+    padding:12px 16px;background:var(--muted);margin:12px 0}
+  .alert strong{display:block}
+
+  .checklist{list-style:none;padding:0!important}
+  .checklist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+  .checklist li:last-child{border-bottom:0}
+  .checklist input{accent-color:var(--primary);width:18px;height:18px;margin-top:3px;flex:none}
+  .ready{font-size:13px;font-weight:600;margin-top:8px}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+  @media(max-width:600px){.compare{grid-template-columns:1fr}}
+  .ex{border-radius:var(--radius);padding:10px 14px;font-size:14px;border:1px solid}
+  .ex b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+  .ex.bad{background:var(--bad-bg);border-color:var(--bad);}
+  .ex.bad b{color:var(--bad)}
+  .ex.good{background:var(--good-bg);border-color:var(--good)}
+  .ex.good b{color:var(--good)}
+
+  details{border:1px solid var(--border);border-radius:var(--radius);margin:10px 0;background:var(--background)}
+  summary{cursor:pointer;padding:10px 14px;font-weight:500;font-size:14px;list-style:none;display:flex;justify-content:space-between;border-radius:var(--radius);outline:none}
+  summary::after{content:"+";color:var(--muted-foreground);font-weight:600}
+  details[open] summary::after{content:"–"}
+  details > div{padding:0 14px 12px}
+  .formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:var(--muted);
+    border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin:8px 0;white-space:pre-wrap}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{font-weight:600;background:var(--muted)}
+  .flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;font-size:13px}
+  .flow span{border:1px solid var(--border);border-radius:999px;padding:3px 10px;background:var(--muted)}
+  .flow span.on{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+  .flow i{color:var(--muted-foreground);font-style:normal}
+  footer{text-align:center;color:var(--muted-foreground);font-size:12px;grid-column:1/-1}
+</style>
+<script>try{if(localStorage.getItem("ppb-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">P</div>
+    <h1>Prototype Prompt Builder</h1>
+    <span class="badge">How to use</span>
+    <div class="spacer"></div>
+    <button class="btn btn-outline" id="theme" aria-label="Toggle dark mode">◐ Theme</button>
+    <a class="btn btn-outline" href="tutorial.html">🎓 Tutorial</a>
+    <a class="btn btn-primary" href="prototype-prompt-builder.html">← Back to the builder</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" aria-label="On this page">
+    <p>On this page</p>
+    <a href="#before">1. Before you start</a>
+    <a href="#steps">2. Using the builder</a>
+    <a href="#purpose" class="sub">What does it do?</a>
+    <a href="#users" class="sub">Target users</a>
+    <a href="#story" class="sub">Key user story</a>
+    <a href="#screens" class="sub">Screens</a>
+    <a href="#task" class="sub">Test task</a>
+    <a href="#look" class="sub">Look &amp; feel</a>
+    <a href="#design-systems">3. Design systems</a>
+    <a href="#output">4. Using your prompt</a>
+    <a href="#after">5. After it generates</a>
+    <a href="#problems">6. Common problems</a>
+  </nav>
+
+  <main>
+    <h2>How to use the Prompt Builder</h2>
+    <p class="lead">The builder turns your UX research into a clear prompt. You paste that prompt into Google Stitch, Lovable or a similar platform, and it makes a clickable prototype for user testing.</p>
+
+    <!-- BEFORE -->
+    <section id="before" class="card">
+      <h3><span class="step">1</span>Before you start: do the research first</h3>
+      <p>The builder <strong>does not do your UX thinking for you</strong>. It asks for things you should already have from earlier work. If you start without research, the AI will fill the gaps with guesses, and you'll end up testing a generic app rather than your design.</p>
+      <div class="flow" aria-label="Where this fits in the design process">
+        <span>Research</span><i>→</i><span>Personas</span><i>→</i><span>Journey map</span><i>→</i><span>User stories</span><i>→</i><span>Wireframes</span><i>→</i><span class="on">Prompt + prototype</span><i>→</i><span>User testing</span><i>→</i><span>Iterate</span>
+      </div>
+      <h4>Ready? Tick off what you have</h4>
+      <ul class="checklist" id="checklist">
+        <li><input type="checkbox" id="k1"><label for="k1"><strong>User research</strong>: interviews, surveys or observation notes showing a real problem people have.</label></li>
+        <li><input type="checkbox" id="k2"><label for="k2"><strong>At least one persona</strong>: a named user with goals, frustrations and context, based on your research.</label></li>
+        <li><input type="checkbox" id="k3"><label for="k3"><strong>A journey map</strong>: the steps your persona goes through now, with the pain points marked.</label></li>
+        <li><input type="checkbox" id="k4"><label for="k4"><strong>User stories</strong>: what your persona needs to do, written as "As a… I want… so that…".</label></li>
+        <li><input type="checkbox" id="k5"><label for="k5"><strong>Wireframes</strong> (paper or digital): rough layouts of the main screens and how they link.</label></li>
+      </ul>
+      <p class="ready" id="readyMsg" aria-live="polite"></p>
+      <div class="alert"><strong>Keep these open while you use the builder.</strong>Almost every box can be filled by copying from these documents. If you can't fill a box, that usually means part of your research is missing.</div>
+    </section>
+
+    <!-- STEPS -->
+    <section id="steps" class="card">
+      <h3><span class="step">2</span>Using the builder, step by step</h3>
+      <p>Work down the form on the left. The prompt on the right updates as you go. You can type in any box or press its <strong>🎙 microphone</strong> button and speak. Press it again to stop.</p>
+      <table>
+        <tr><th>Builder step</th><th>Where the answer comes from</th></tr>
+        <tr><td>1 · Platform</td><td>The tool you're using in class (Stitch or Lovable), or another similar platform.</td></tr>
+        <tr><td>2 · The product</td><td>Your research summary, persona and user stories.</td></tr>
+        <tr><td>3 · Screens</td><td>Your wireframes and journey map.</td></tr>
+        <tr><td>4 · Test task</td><td>Your key user story, turned into something a tester can do.</td></tr>
+        <tr><td>5 · Look &amp; feel</td><td>Your mood board, brand colours or chosen design system.</td></tr>
+        <tr><td>6 · Testing &amp; accessibility</td><td>Leave the ticked options on unless you have a good reason not to.</td></tr>
+      </table>
+    </section>
+
+    <section id="purpose" class="card">
+      <h3><span class="step">?</span>Stuck on "What does it do?"</h3>
+      <p>Describe the product in one or two sentences: <strong>who</strong> it helps, <strong>what</strong> they can do with it, and <strong>why</strong> that matters. Leave out the list of features. The screens step is where those go.</p>
+      <div class="formula">[Product] lets [type of user] [do something] so they can [benefit / solve problem].</div>
+      <div class="compare">
+        <div class="ex bad"><b>Too vague</b>A food app for students.</div>
+        <div class="ex good"><b>Better</b>Lets students pre-order food from campus cafés and collect it without queueing between lectures.</div>
+        <div class="ex bad"><b>Feature list</b>It has login, a map, chat, payments, reviews, a loyalty scheme and notifications.</div>
+        <div class="ex good"><b>Better</b>Helps first-year students find a quiet study space on campus that's free right now.</div>
+      </div>
+      <details><summary>Questions to ask yourself</summary><div><ul>
+        <li>What problem did your research show? Which pain point on your journey map does this fix?</li>
+        <li>If you told a friend about it in one breath, what would you say?</li>
+        <li>What does the user have at the end that they didn't have before?</li>
+      </ul></div></details>
+    </section>
+
+    <section id="users" class="card">
+      <h3><span class="step">?</span>Stuck on "Target users"</h3>
+      <p>Copy this from your <strong>persona</strong>. The AI uses it to choose the tone, content, text size and complexity, so be specific about their <em>situation</em>, not just their age.</p>
+      <div class="formula">[Who they are] who [situation / context] and [key frustration or need].</div>
+      <div class="compare">
+        <div class="ex bad"><b>Too broad</b>Everyone. / Young people.</div>
+        <div class="ex good"><b>Better</b>Busy undergraduates aged 18–25 who have short gaps between lectures and hate queueing.</div>
+        <div class="ex bad"><b>Demographics only</b>Women aged 60+.</div>
+        <div class="ex good"><b>Better</b>Retired people new to smartphones who want to video-call grandchildren but find apps confusing.</div>
+      </div>
+      <details><summary>No persona yet?</summary><div>
+        <p>Stop and make one first. It only needs a name, a photo or sketch, a short background, 2–3 goals and 2–3 frustrations, all drawn from your research. You can then type, for example, <em>"Priya, a second-year nursing student who…"</em> into this box.</p>
+      </div></details>
+    </section>
+
+    <section id="story" class="card">
+      <h3><span class="step">?</span>Stuck on "Key user story"</h3>
+      <p>Choose the <strong>one</strong> user story that matters most. It should be the main thing your prototype has to prove works. You'll test this story with real users.</p>
+      <div class="formula">As a [type of user], I want to [goal / action] so that [benefit].</div>
+      <div class="compare">
+        <div class="ex bad"><b>Not a story</b>The app should have a basket.</div>
+        <div class="ex good"><b>Better</b>As a student between lectures, I want to order lunch ahead so that I can collect it without queueing.</div>
+        <div class="ex bad"><b>Too big</b>As a user, I want to manage my whole life.</div>
+        <div class="ex good"><b>Better</b>As a new student, I want to see which study rooms are free now so that I don't waste time walking around.</div>
+      </div>
+      <details><summary>How to pick the "key" one</summary><div><ul>
+        <li>Look at your journey map. Which step has the biggest pain point? Pick the story that fixes it.</li>
+        <li>It should be something a tester can finish in 2–5 minutes.</li>
+        <li>If you have several stories, put the others into later prototypes. One focused flow tests better than five half-built ones.</li>
+      </ul></div></details>
+    </section>
+
+    <section id="screens" class="card">
+      <h3><span class="step">?</span>Stuck on "Screens"</h3>
+      <p>List the screens a user moves through to complete your key user story, <strong>in order</strong>. Use your wireframes. Each step on your journey map often becomes a screen.</p>
+      <ul>
+        <li>Name each screen simply, e.g. <em>Home</em>, <em>Search results</em>, <em>Item detail</em>, <em>Confirmation</em>.</li>
+        <li>In the second box, list the main content and the main button on that screen.</li>
+        <li>About 3–6 screens is right. More than that and the AI is more likely to produce something muddled.</li>
+        <li>Delete the example screens if they don't fit your idea.</li>
+      </ul>
+    </section>
+
+    <section id="task" class="card">
+      <h3><span class="step">?</span>Stuck on "Test task"</h3>
+      <p>Turn your key user story into a realistic task that you'll read out to testers. Give them a goal, but don't tell them which buttons to press.</p>
+      <div class="compare">
+        <div class="ex bad"><b>Gives the answer</b>Click "Menu", then tap the first item, then press "Add".</div>
+        <div class="ex good"><b>Better</b>You have 15 minutes before your next lecture. Order a vegetarian lunch under £5 from the library café.</div>
+      </div>
+      <p>In <strong>Interactions that must work</strong>, list every click needed to finish that task. The AI will then build those parts properly instead of leaving dead buttons.</p>
+    </section>
+
+    <section id="look" class="card">
+      <h3><span class="step">?</span>Stuck on "Look &amp; feel"</h3>
+      <p>Use your mood board or brand guidelines. Give the mood in 2–3 words (e.g. <em>calm, friendly, minimal</em>), name your main colours, and choose a design system if you have one. The <a href="#design-systems">Design systems</a> section below explains how to choose.</p>
+    </section>
+
+    <!-- DESIGN SYSTEMS -->
+    <section id="design-systems" class="card">
+      <h3><span class="step">3</span>Design systems</h3>
+      <p>A <strong>design system</strong> is a ready-made set of interface components (buttons, inputs, menus, dialogs, tabs, cards and so on) with <strong>guidelines for how and when to use each one</strong>. Material Design, shadcn/ui, Carbon, Fluent and Apple's Human Interface Guidelines are all examples.</p>
+
+      <h4>Why you need to learn how they work</h4>
+      <p>An AI platform will happily place components for you, but it can't judge whether it chose the <em>right</em> one. That's your job as a UX designer. When you know a design system well, you can:</p>
+      <ul>
+        <li><strong>Choose the right component for the job.</strong> For example, the guidelines say when to use a dialog and when to use a toast message, or when to use tabs and when to use a menu.</li>
+        <li><strong>Spot when the AI gets it wrong</strong>, such as a destructive "Delete" button styled as the main action, or checkboxes used where only one choice is allowed.</li>
+        <li><strong>Design every state</strong>, not just the default: hover, focus, pressed, disabled, loading, error and empty.</li>
+        <li><strong>Build in accessibility.</strong> Good design systems come with tested contrast, focus styles, keyboard behaviour and labelling rules.</li>
+        <li><strong>Use familiar patterns</strong>, so your test users already know how things work and your testing measures your design rather than confusion.</li>
+        <li><strong>Write better prompts and follow-ups</strong> using the right names, e.g. <em>"Change the filter chips to a segmented control"</em> instead of <em>"make those buttons different"</em>.</li>
+      </ul>
+
+      <div class="alert"><strong>Before you prototype, spend time in your chosen system's documentation.</strong>Find its component pages and read the "usage" or "do and don't" guidance for the components your screens need, such as buttons, forms, navigation, dialogs and feedback messages.</div>
+
+      <details><summary>Where to find each design system's guidelines</summary><div>
+        <table>
+          <tr><th>Design system</th><th>Documentation</th></tr>
+          <tr><td>shadcn/ui</td><td><a href="https://ui.shadcn.com/docs/components" target="_blank" rel="noopener">ui.shadcn.com</a></td></tr>
+          <tr><td>Material Design 3</td><td><a href="https://m3.material.io/components" target="_blank" rel="noopener">m3.material.io</a></td></tr>
+          <tr><td>Apple Human Interface Guidelines</td><td><a href="https://developer.apple.com/design/human-interface-guidelines" target="_blank" rel="noopener">developer.apple.com/design</a></td></tr>
+          <tr><td>IBM Carbon</td><td><a href="https://carbondesignsystem.com" target="_blank" rel="noopener">carbondesignsystem.com</a></td></tr>
+          <tr><td>Ant Design</td><td><a href="https://ant.design/components/overview" target="_blank" rel="noopener">ant.design</a></td></tr>
+          <tr><td>Fluent 2 (Microsoft)</td><td><a href="https://fluent2.microsoft.design" target="_blank" rel="noopener">fluent2.microsoft.design</a></td></tr>
+          <tr><td>Bootstrap</td><td><a href="https://getbootstrap.com/docs/" target="_blank" rel="noopener">getbootstrap.com</a></td></tr>
+        </table>
+      </div></details>
+
+      <h4>What this means for the builder's design system menu</h4>
+      <p>Each platform handles your choice differently. The hint under the menu in the builder changes to tell you which applies.</p>
+      <table>
+        <tr><th>Platform</th><th>What happens when you choose a design system</th></tr>
+        <tr><td><strong>Lovable</strong></td><td>Choosing a React-based library (shadcn/ui, Material via MUI, Ant Design, Fluent, Carbon, Bootstrap) can change the <strong>actual components</strong> it builds with. shadcn/ui is Lovable's default.</td></tr>
+        <tr><td><strong>Google Stitch</strong></td><td>Every option is a <strong>style hint</strong>. Stitch draws its own components to match the look. Material Design 3 fits Stitch best because that's what it's built on. You can fine-tune colours, fonts and corner rounding in Stitch's theme settings.</td></tr>
+        <tr><td><strong>Both</strong></td><td>Apple HIG is a <strong>style reference</strong> only. It's guidelines rather than code, so the AI copies the look, not the components.</td></tr>
+      </table>
+      <p class="muted">Not sure which to choose? Choose "Let the platform choose" and describe the mood and colours instead. Even then, check the result against a design system's guidelines.</p>
+    </section>
+
+    <!-- OUTPUT -->
+    <section id="output" class="card">
+      <h3><span class="step">4</span>Using your prompt</h3>
+      <h4>One prompt or screen by screen?</h4>
+      <ul>
+        <li><strong>One prompt</strong> puts everything in a single message. Start with this in <strong>Lovable</strong>.</li>
+        <li><strong>Screen by screen</strong> gives you a set of shorter prompts to paste one at a time. This often works better in <strong>Stitch</strong>, or whenever a big prompt gives a muddled result.</li>
+      </ul>
+      <h4>Then</h4>
+      <ol>
+        <li>Read the prompt. Does it describe <em>your</em> design? Change any box on the left if it doesn't.</li>
+        <li>Press <strong>Copy</strong> and paste the prompt into the platform.</li>
+        <li><strong>Stitch:</strong> choose mobile or web first. You can also upload a photo of your paper wireframe.</li>
+        <li><strong>Lovable:</strong> paste the prompt into the chat box on the home page and send it.</li>
+      </ol>
+      <div class="alert"><strong>Free plans have limits.</strong>Each message uses up credits. Spend time getting the prompt right in the builder before you send it, because that costs nothing.</div>
+    </section>
+
+    <section id="after" class="card">
+      <h3><span class="step">5</span>After it generates</h3>
+      <ol>
+        <li><strong>Try the test task yourself.</strong> Can you finish it without getting stuck?</li>
+        <li><strong>Fix one thing per message</strong>, e.g. <em>"Make the 'Pay' button go to the confirmation screen."</em> Several changes in one message often break other things.</li>
+        <li><strong>Check accessibility:</strong> contrast, text size and clear labels.</li>
+        <li><strong>Check the components against the design system's guidelines.</strong> Is each one the right component, used the right way, with all its states?</li>
+        <li><strong>Get a shareable link</strong> (Lovable: <em>Publish</em>; Stitch: preview or export) to use in testing.</li>
+        <li><strong>Test with real users</strong>, write down what happens, and go back to your design. The AI can build a prototype, but only testing tells you whether it's useful, usable and valuable.</li>
+      </ol>
+    </section>
+
+    <section id="problems" class="card">
+      <h3><span class="step">6</span>Common problems</h3>
+      <details><summary>The result looks generic and nothing like my wireframes</summary><div>
+        <p>Add more detail to the <em>Screens</em> descriptions, upload your wireframe image (Stitch), or switch to <em>Screen by screen</em>. Check that your <em>What does it do?</em> and <em>Target users</em> answers are specific.</p></div></details>
+      <details><summary>Buttons don't do anything</summary><div>
+        <p>List the missing interactions in <em>Interactions that must work</em>, or send a follow-up message such as <em>"When I tap 'Add to basket', update the basket count and show a confirmation."</em></p></div></details>
+      <details><summary>It added login screens, accounts or a database I didn't ask for</summary><div>
+        <p>Make sure <em>No login, payments or real backend</em> is ticked in step 6, then tell it: <em>"Remove the login screen. This is a prototype for user testing only."</em></p></div></details>
+      <details><summary>The microphone button doesn't work</summary><div>
+        <p>Use Chrome, Edge or Safari, allow microphone access when the browser asks, and open the builder from its web address rather than as a file on your computer. You can also use your computer's own dictation (Windows + H, or press Fn twice on a Mac).</p></div></details>
+      <details><summary>I've run out of credits</summary><div>
+        <p>Copy your prompt and try another similar platform (e.g. Bolt.new or v0). Choose <em>Other</em> in step 1 and type its name.</p></div></details>
+    </section>
+
+    <p style="text-align:center;margin-top:28px"><a class="btn btn-primary" href="prototype-prompt-builder.html">← Back to the builder</a></p>
+  </main>
+  <footer>Nothing you type or tick on this page leaves your browser.</footer>
+</div>
+
+<script>
+document.getElementById("theme").onclick = () => {const d=document.documentElement.classList.toggle("dark");try{localStorage.setItem("ppb-theme",d?"dark":"light")}catch(e){}};
+window.addEventListener("storage",e=>{if(e.key==="ppb-theme")document.documentElement.classList.toggle("dark",e.newValue==="dark")});
+const boxes = [...document.querySelectorAll("#checklist input")], msg = document.getElementById("readyMsg");
+function update(){
+  const n = boxes.filter(b => b.checked).length;
+  msg.textContent = n === boxes.length ? "✓ You're ready to build your prompt."
+    : n === 0 ? "" : `${n} of ${boxes.length} ready. Finish the rest before you start, or your prototype will be built on guesses.`;
+}
+boxes.forEach(b => b.addEventListener("change", update));
+</script>
+</body>
+</html>

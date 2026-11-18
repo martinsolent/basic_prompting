@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype Prompt Builder – Stitch, Lovable &amp; similar platforms</title>
+<style>
+  /* ---------- shadcn/ui-style tokens (zinc theme) ---------- */
+  :root{
+    --background:#ffffff; --foreground:#09090b;
+    --card:#ffffff; --muted:#f4f4f5; --muted-foreground:#71717a;
+    --border:#e4e4e7; --input:#e4e4e7; --ring:#18181b;
+    --primary:#18181b; --primary-foreground:#fafafa;
+    --secondary:#f4f4f5; --secondary-foreground:#18181b;
+    --accent:#f4f4f5; --success:#16a34a;
+    --radius:0.5rem;
+  }
+  .dark{
+    --background:#09090b; --foreground:#fafafa;
+    --card:#0c0c0e; --muted:#27272a; --muted-foreground:#a1a1aa;
+    --border:#27272a; --input:#27272a; --ring:#d4d4d8;
+    --primary:#fafafa; --primary-foreground:#18181b;
+    --secondary:#27272a; --secondary-foreground:#fafafa;
+    --accent:#27272a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--background);color:var(--foreground);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--background);z-index:5}
+  .bar{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+  .logo{width:28px;height:28px;border-radius:6px;background:var(--primary);color:var(--primary-foreground);
+    display:grid;place-items:center;font-weight:700;font-size:13px}
+  .bar h1{font-size:15px;font-weight:600;margin:0}
+  .bar .spacer{flex:1}
+  main{max-width:1200px;margin:0 auto;padding:24px 20px 60px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+  .intro{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:32px;align-items:center}
+  @media(max-width:900px){.intro{grid-template-columns:1fr}}
+  .promo{margin:0}
+  .promo video{width:100%;aspect-ratio:16/9;display:block;border-radius:calc(var(--radius) + 4px);
+    border:1px solid var(--border);background:#09090b;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  .promo figcaption{font-size:12px;color:var(--muted-foreground);margin-top:6px;text-align:center}
+  .intro h2{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0 0 6px}
+  .intro p{color:var(--muted-foreground);margin:0;max-width:760px}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:calc(var(--radius) + 4px);
+    box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px}
+  .card-h{padding:18px 20px 0}
+  .card-h h3{margin:0;font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .card-h p{margin:4px 0 0;color:var(--muted-foreground);font-size:13px}
+  .card-c{padding:16px 20px 20px;display:grid;gap:14px}
+  .step{width:22px;height:22px;border-radius:999px;background:var(--secondary);font-size:12px;
+    display:grid;place-items:center;font-weight:600;border:1px solid var(--border)}
+
+  label{font-size:13px;font-weight:500;display:block;margin-bottom:6px}
+  .hint{font-size:12px;color:var(--muted-foreground);margin-top:4px}
+  input[type=text],textarea,select{width:100%;font:inherit;color:var(--foreground);background:var(--background);
+    border:1px solid var(--input);border-radius:var(--radius);padding:8px 12px;outline:none;transition:box-shadow .15s}
+  textarea{min-height:70px;resize:vertical}
+  input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,.choice:focus-within{
+    box-shadow:0 0 0 2px var(--background),0 0 0 4px var(--ring)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:560px){.row{grid-template-columns:1fr}}
+
+  /* radio cards / toggle group */
+  .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .choices.two{grid-template-columns:repeat(2,1fr)}
+  .choice{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;cursor:pointer;position:relative}
+  .choice input{position:absolute;opacity:0;pointer-events:none}
+  .choice strong{display:block;font-size:13px}
+  .choice span{font-size:12px;color:var(--muted-foreground)}
+  .choice:has(input:checked){border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .check{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer}
+  .check input{accent-color:var(--primary);width:16px;height:16px;margin-top:2px}
+
+  .btn{font:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);padding:8px 14px;cursor:pointer;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;outline:none;white-space:nowrap}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground)}
+  .btn-primary:hover{opacity:.9}
+  .btn-outline{background:var(--background);border-color:var(--input);color:var(--foreground)}
+  .btn-outline:hover{background:var(--accent)}
+  .btn-ghost{background:transparent;color:var(--foreground)}
+  .btn-ghost:hover{background:var(--accent)}
+  .btn-sm{padding:5px 10px;font-size:12px}
+
+  .screen{display:grid;grid-template-columns:1fr 1.6fr auto;gap:8px;align-items:start}
+  @media(max-width:560px){.screen{grid-template-columns:1fr}}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;
+    border:1px solid var(--border);background:var(--secondary);color:var(--secondary-foreground)}
+  .alert{border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:13px;background:var(--muted)}
+  .alert strong{display:block;margin-bottom:4px}
+  .alert ul{margin:4px 0 0;padding-left:18px}
+
+  /* output */
+  .out{position:sticky;top:76px}
+  .tabs{display:inline-flex;background:var(--muted);border-radius:var(--radius);padding:3px;gap:2px}
+  .tab{border:0;background:transparent;font:inherit;font-size:13px;font-weight:500;padding:5px 12px;border-radius:6px;
+    color:var(--muted-foreground);cursor:pointer}
+  .tab[aria-selected=true]{background:var(--background);color:var(--foreground);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .prompt{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;
+    background:var(--muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px;
+    max-height:60vh;overflow:auto;margin:0}
+  .pblock{display:grid;gap:6px}
+  .pblock-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+  .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted-foreground)}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--foreground);color:var(--background);
+    padding:10px 14px;border-radius:var(--radius);font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none}
+  .toast.show{opacity:1;transform:none}
+  .sep{height:1px;background:var(--border);margin:2px 0}
+  a.btn{text-decoration:none}
+  .lbl{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .stuck{font-size:12px;font-weight:500;color:var(--muted-foreground);text-decoration:underline;text-underline-offset:3px}
+  .stuck:hover{color:var(--foreground)}
+
+  /* dictation */
+  .mic-wrap{position:relative}
+  .mic-wrap input[type=text],.mic-wrap textarea{padding-right:42px}
+  .mic{position:absolute;right:5px;top:5px;width:28px;height:28px;border-radius:6px;border:0;background:transparent;
+    color:var(--muted-foreground);cursor:pointer;display:grid;place-items:center;outline:none}
+  .mic:hover{background:var(--accent);color:var(--foreground)}
+  .mic:focus-visible{box-shadow:0 0 0 2px var(--ring)}
+  .mic.on{background:#dc2626;color:#fff;animation:pulse 1.2s ease-in-out infinite}
+  .mic svg{width:16px;height:16px}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.5)}50%{box-shadow:0 0 0 6px rgba(220,38,38,0)}}
+  .intro .mic-note{margin-top:18px;font-size:13px;color:var(--muted-foreground);display:flex;gap:6px;align-items:center}
+  footer{grid-column:1/-1;color:var(--muted-foreground);font-size:12px;text-align:center}
+</style>
+<script>try{if(localStorage.getItem("ppb-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">P</div>
+    <h1>Prototype Prompt Builder</h1>
+    <span class="badge">UX testing</span>
+    <div class="spacer"></div>
+    <a class="btn btn-outline" href="tutorial.html" target="_blank" rel="noopener">🎓 Tutorial</a>
+    <a class="btn btn-primary" href="how-to-use.html" target="_blank" rel="noopener">📖 How to use this builder</a>
+    <button class="btn btn-ghost btn-sm" id="reset">Reset</button>
+    <button class="btn btn-outline btn-sm" id="theme" aria-label="Toggle dark mode">◐ Theme</button>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <div>
+    <h2>Write a prompt for an AI prototyping platform</h2>
+    <p>Fill in the steps to build a prompt for a clickable prototype you can put in front of real users. It's tuned for
+      <strong>Google Stitch</strong> and <strong>Lovable</strong>. It also works with similar online platforms that give you a visual canvas or live preview, such as Bolt.new, v0 or Figma Make.
+      Start from your research, user stories and wireframes. The AI builds the prototype, but only your testing can tell you whether the design works.</p>
+    <p class="mic-note" id="micNote">🎙 Type in any box, or press its microphone button and speak. Press the button again to stop.</p>
+    </div>
+    <figure class="promo">
+      <video controls preload="metadata" playsinline poster="promo-poster.jpg"
+        aria-label="49-second overview video of the Prototype Prompt Builder">
+        <source src="prompt-builder-promo.mp4" type="video/mp4">
+        Your browser can't play this video. <a href="prompt-builder-promo.mp4">Download it</a>.
+      </video>
+      <figcaption>▶ Watch the 49-second overview</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= FORM ================= -->
+  <div>
+    <div class="card">
+      <div class="card-h"><h3><span class="step">1</span>Platform</h3><p>The wording changes to suit the tool.</p></div>
+      <div class="card-c">
+        <div class="choices" role="radiogroup">
+          <label class="choice"><input type="radio" name="platform" value="stitch" checked><strong>Google Stitch</strong><span>Design-first, screens on a canvas</span></label>
+          <label class="choice"><input type="radio" name="platform" value="lovable"><strong>Lovable</strong><span>Builds a working web app</span></label>
+          <label class="choice"><input type="radio" name="platform" value="other"><strong>Other</strong><span>Bolt, v0, Figma Make…</span></label>
+        </div>
+        <div id="otherWrap" hidden>
+          <label for="otherName">Platform name</label>
+          <input type="text" id="otherName" placeholder="e.g. Bolt.new, v0, Figma Make, Uizard">
+        </div>
+        <div class="alert" id="tip"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="step">2</span>The product</h3><p>What it is and who it's for. Take this from your research, personas and journey maps. <a class="stuck" href="how-to-use.html#before" target="_blank" rel="noopener">Not done these yet?</a></p></div>
+      <div class="card-c">
+        <div class="row">
+          <div><label for="appName">App / product name</label><input type="text" id="appName" placeholder="e.g. CampusEats"></div>
+          <div><label for="appType">Type of product</label>
+            <select id="appType">
+              <option>mobile app</option><option>website</option><option>web app / dashboard</option>
+              <option>tablet app</option><option>kiosk / touchscreen</option>
+            </select></div>
+        </div>
+        <div><div class="lbl"><label for="purpose">What does it do? (one or two sentences)</label>
+          <a class="stuck" href="how-to-use.html#purpose" target="_blank" rel="noopener">Stuck?</a></div>
+          <textarea id="purpose" placeholder="e.g. Lets students pre-order food from campus cafés and collect it without queueing."></textarea></div>
+        <div><div class="lbl"><label for="users">Target users</label>
+          <a class="stuck" href="how-to-use.html#users" target="_blank" rel="noopener">Stuck?</a></div>
+          <input type="text" id="users" placeholder="e.g. busy undergraduates aged 18–25 who are often between lectures">
+          <div class="hint">Name your persona if you have one.</div></div>
+        <div><div class="lbl"><label for="story">Key user story</label>
+          <a class="stuck" href="how-to-use.html#story" target="_blank" rel="noopener">Stuck?</a></div>
+          <input type="text" id="story" placeholder="As a student, I want to… so that…"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="step">3</span>Screens</h3><p>List screens in the order a user moves through them. Follow your wireframes. <a class="stuck" href="how-to-use.html#screens" target="_blank" rel="noopener">Stuck?</a></p></div>
+      <div class="card-c">
+        <div id="screens"></div>
+        <div><button class="btn btn-outline btn-sm" id="addScreen">+ Add screen</button></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="step">4</span>The test task</h3><p>What will testers try to do? The prototype must let them finish this task. <a class="stuck" href="how-to-use.html#task" target="_blank" rel="noopener">Stuck?</a></p></div>
+      <div class="card-c">
+        <div><label for="task">Task(s) for testers</label>
+          <textarea id="task" placeholder="e.g. Find a vegetarian lunch under £5 at the library café, order it and see the collection time."></textarea></div>
+        <div><label for="interactions">Interactions that must work</label>
+          <textarea id="interactions" placeholder="e.g. tapping a category filters the list; 'Add to basket' updates the basket count; 'Pay' goes to a confirmation screen"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="step">5</span>Look &amp; feel</h3><p>Your style decisions or the design system you chose. Get to know its components and usage guidelines first. <a class="stuck" href="how-to-use.html#design-systems" target="_blank" rel="noopener">Why?</a></p></div>
+      <div class="card-c">
+        <div class="row">
+          <div><label for="ds">Design system</label>
+            <select id="ds">
+              <option value="">Let the platform choose</option>
+              <option>shadcn/ui</option><option>Material Design 3</option><option>Apple Human Interface Guidelines</option>
+              <option>IBM Carbon</option><option>Ant Design</option>
+              <option>Fluent 2 (Microsoft)</option><option>Bootstrap</option>
+            </select>
+            <div class="hint" id="dsHint" aria-live="polite"></div></div>
+          <div><label for="mood">Mood / personality</label>
+            <input type="text" id="mood" placeholder="e.g. friendly, calm, minimal"></div>
+        </div>
+        <div class="row">
+          <div><label for="colours">Brand colours</label><input type="text" id="colours" placeholder="e.g. deep green #1F5E3B, cream accents"></div>
+          <div><label for="theme2">Theme</label>
+            <select id="theme2"><option value="">No preference</option><option>light mode</option><option>dark mode</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3><span class="step">6</span>Testing &amp; accessibility</h3><p>These keep the prototype focused and testable.</p></div>
+      <div class="card-c">
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="cData" checked>Realistic sample data (no lorem ipsum)</label>
+          <label class="check"><input type="checkbox" id="cNoBack" checked>No login, payments or real backend</label>
+          <label class="check"><input type="checkbox" id="cContrast" checked>WCAG AA colour contrast</label>
+          <label class="check"><input type="checkbox" id="cTargets" checked>Large touch targets (44px+)</label>
+          <label class="check"><input type="checkbox" id="cLabels" checked>Clear labels and plain English</label>
+          <label class="check"><input type="checkbox" id="cFeedback" checked>Visible feedback (states, confirmations)</label>
+          <label class="check"><input type="checkbox" id="cErrors">Include an error / empty state</label>
+          <label class="check"><input type="checkbox" id="cKeyboard">Keyboard accessible</label>
+        </div>
+        <div><label for="extra">Anything else? (optional)</label>
+          <textarea id="extra" placeholder="e.g. Avoid a hamburger menu – use a bottom tab bar."></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= OUTPUT ================= -->
+  <div class="out">
+    <div class="card">
+      <div class="card-h" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <h3>Your prompt</h3>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-mode="one">One prompt</button>
+          <button class="tab" role="tab" aria-selected="false" data-mode="split">Screen by screen</button>
+        </div>
+      </div>
+      <div class="card-c">
+        <div id="output"></div>
+        <div class="sep"></div>
+        <div class="alert">
+          <strong>After it generates</strong>
+          <ul>
+            <li>Click through the test task yourself before anyone else tries it.</li>
+            <li>Fix one thing per follow-up prompt, e.g. "Make the 'Pay' button lead to the confirmation screen."</li>
+            <li>Get a shareable link or preview to use in your user testing sessions.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Single-file tool · styled after shadcn/ui · nothing you type leaves your browser</footer>
+</main>
+
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const tips = {
+  stitch:`<strong>Tips for Google Stitch</strong><ul>
+    <li>Stitch designs screens on a canvas. Short, focused prompts work best, so try <em>Screen by screen</em>.</li>
+    <li>Choose mobile or web in Stitch before you generate.</li>
+    <li>You can upload a photo of your paper wireframe together with the prompt.</li>
+    <li>Link the screens into a clickable flow, or export to Figma or code for testing.</li></ul>`,
+  lovable:`<strong>Tips for Lovable</strong><ul>
+    <li>Lovable builds a working React app and uses shadcn/ui by default, so buttons and forms really work.</li>
+    <li>Paste <em>One prompt</em> first, then make small changes in chat.</li>
+    <li>Say "no backend" so it doesn't set up databases or accounts.</li>
+    <li>Click <em>Publish</em> to get a link that testers can open on their phones.</li></ul>`,
+  other:`<strong>Other platforms</strong><ul>
+    <li>Many online tools work in a similar way: you type a prompt, then see a canvas or live preview (Bolt.new, v0, Figma Make, Uizard…).</li>
+    <li>Start with <em>One prompt</em>. If the result gets muddled, switch to <em>Screen by screen</em>.</li>
+    <li>Check the free plan's limits before class, because credits can run out quickly.</li></ul>`
+};
+const defaults = [
+  ["Home","Search bar, café categories, featured items"],
+  ["Menu / list","Items with photo, price, dietary tags, filter"],
+  ["Item detail","Description, options, 'Add to basket' button"],
+  ["Confirmation","Order summary and collection time"]
+];
+let mode = "one";
+
+function screenRow(name="", desc=""){
+  const d = document.createElement("div");
+  d.className = "screen";
+  d.innerHTML = `<input type="text" class="sName" placeholder="Screen name" value="${name}">
+    <input type="text" class="sDesc" placeholder="What's on it / what it's for" value="${desc}">
+    <button class="btn btn-ghost btn-sm" aria-label="Remove screen">✕</button>`;
+  d.querySelector("button").onclick = () => { if(activeBtn && d.contains(activeBtn)) cleanup(true); d.remove(); build(); };
+  d.addEventListener("input", build);
+  $("screens").appendChild(d);
+  d.querySelectorAll("input[type=text]").forEach(addMic);
+}
+
+/* ---------- Dictation (Web Speech API) ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const MIC_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>`;
+let rec = null, activeBtn = null;
+
+function addMic(el){
+  if(!SR || el.parentNode.classList.contains("mic-wrap")) return;
+  const w = document.createElement("div");
+  w.className = "mic-wrap";
+  el.parentNode.insertBefore(w, el);
+  w.appendChild(el);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "mic"; b.innerHTML = MIC_ICON;
+  b.title = "Dictate"; b.setAttribute("aria-pressed","false");
+  b.setAttribute("aria-label", "Dictate into " + (document.querySelector(`label[for="${el.id}"]`)?.textContent || el.placeholder || "this field"));
+  b.onclick = () => toggleMic(el, b);
+  w.appendChild(b);
+}
+function cleanup(abort){
+  if(rec){ rec.onend = null; if(abort) rec.abort(); rec = null; }
+  if(activeBtn){ activeBtn.classList.remove("on"); activeBtn.setAttribute("aria-pressed","false"); activeBtn.title = "Dictate"; }
+  activeBtn = null;
+}
+function toggleMic(el, b){
+  if(activeBtn === b){ rec.stop(); return; }   // stop & keep final words
+  cleanup(true);                                // stop any other field
+  rec = new SR();
+  rec.lang = "en-GB"; rec.interimResults = true; rec.continuous = true;
+  const base = el.value ? el.value.replace(/\s*$/, " ") : "";
+  let finalText = "";
+  rec.onresult = e => {
+    let interim = "";
+    for(let i = e.resultIndex; i < e.results.length; i++){
+      const t = e.results[i][0].transcript;
+      e.results[i].isFinal ? finalText += t : interim += t;
+    }
+    let text = (finalText + interim).replace(/^\s+/, "");
+    if(!base && text) text = text[0].toUpperCase() + text.slice(1);
+    el.value = base + text;
+    el.dispatchEvent(new Event("input", {bubbles:true}));
+  };
+  rec.onerror = e => {
+    if(e.error === "not-allowed" || e.error === "service-not-allowed") showToast("Microphone blocked: allow mic access in your browser");
+    else if(e.error === "no-speech") showToast("No speech heard. Try again.");
+    else if(e.error === "network") showToast("Dictation needs an internet connection");
+  };
+  rec.onend = () => cleanup(false);
+  try { rec.start(); } catch(err){ cleanup(true); return; }
+  activeBtn = b; b.classList.add("on"); b.setAttribute("aria-pressed","true"); b.title = "Stop dictating";
+  el.focus();
+}
+
+const v = id => $(id).value.trim();
+const platform = () => document.querySelector("input[name=platform]:checked").value;
+const platName = () => ({stitch:"Google Stitch",lovable:"Lovable"})[platform()] || v("otherName") || "the platform";
+
+function getScreens(){
+  return [...document.querySelectorAll(".screen")].map(r=>({
+    n:r.querySelector(".sName").value.trim(), d:r.querySelector(".sDesc").value.trim()
+  })).filter(s=>s.n||s.d);
+}
+
+/* Which design systems have a React component library Lovable can install */
+const reactLib = {
+  "shadcn/ui":"shadcn/ui", "Material Design 3":"MUI (Material UI)", "IBM Carbon":"@carbon/react",
+  "Ant Design":"antd", "Fluent 2 (Microsoft)":"@fluentui/react-components", "Bootstrap":"react-bootstrap"
+};
+const LEARN = ` <a class="stuck" href="how-to-use.html#design-systems" target="_blank" rel="noopener">Learn more</a>`;
+function dsHint(){
+  const p = platform(), ds = v("ds");
+  let h;
+  if(!ds) h = p==="stitch" ? "Stitch will use its default look, which is based on Material Design."
+    : p==="lovable" ? "Lovable will use its default component library, shadcn/ui."
+    : "The platform will use its own default style.";
+  else if(p==="stitch") h = ds==="Material Design 3"
+    ? "<strong>Best fit:</strong> Stitch is built on Material Design."
+    : `<strong>Style hint:</strong> Stitch will copy the look of ${ds} but draw its own components. You can fine-tune colours, fonts and corners in Stitch's theme settings.`;
+  else if(p==="lovable") h = ds==="shadcn/ui"
+    ? "<strong>Real components:</strong> this is Lovable's default library."
+    : reactLib[ds] ? `<strong>Real components:</strong> Lovable can install ${reactLib[ds]} and build with it. Check the result really uses it.`
+    : `<strong>Style hint:</strong> ${ds} is guidelines, not code, so Lovable will copy the look.`;
+  else h = reactLib[ds]
+    ? "<strong>Depends on the platform:</strong> tools that write code (e.g. Bolt, v0) may use the real components. Design-canvas tools usually just copy the style."
+    : `<strong>Style hint:</strong> ${ds} is guidelines, not code, so the AI will copy the look.`;
+  $("dsHint").innerHTML = h + LEARN;
+}
+
+function styleLines(){
+  const L=[], ds=v("ds"), p=platform();
+  if(ds){
+    if(p==="lovable" && reactLib[ds] && ds!=="shadcn/ui")
+      L.push(`Build the interface with the ${ds} design system using the ${reactLib[ds]} React component library instead of the default components. Follow its usage guidelines for components, spacing and typography.`);
+    else if(p==="lovable" && ds==="shadcn/ui")
+      L.push("Use shadcn/ui components and follow their usage guidelines for components, spacing and typography.");
+    else
+      L.push(`Follow the visual style and usage guidelines of ${ds} for components, spacing and typography.`);
+  }
+  if(v("mood")) L.push(`Mood: ${v("mood")}.`);
+  if(v("colours")) L.push(`Colours: ${v("colours")}.`);
+  if(v("theme2")) L.push(`Use ${v("theme2")}.`);
+  return L;
+}
+function rules(){
+  const p = platform(), L=[];
+  if($("cData").checked) L.push("Use realistic sample content and data that fits the product. Do not use lorem ipsum.");
+  if($("cNoBack").checked) L.push(p==="stitch" ? "This is a prototype for user testing. Do not design login, sign-up or payment screens unless I list them."
+     : "This is a front-end prototype for user testing only. Do not add a backend, database, authentication or real payments. Store any data in memory.");
+  if($("cContrast").checked) L.push("Text and important controls must meet WCAG 2.2 AA colour contrast.");
+  if($("cTargets").checked) L.push("Make tap targets at least 44×44px.");
+  if($("cLabels").checked) L.push("Use clear, plain-English labels on every button and field. Do not rely on icons alone.");
+  if($("cFeedback").checked) L.push("Show clear feedback for actions, such as selected states, loading and success messages.");
+  if($("cErrors").checked) L.push("Include at least one empty state or error message that a tester might see.");
+  if($("cKeyboard").checked && p!=="stitch") L.push("All interactive elements must work with a keyboard and show a visible focus outline.");
+  return L;
+}
+
+function intro(){
+  const p = platform(), name = v("appName") || "a new product", type = v("appType");
+  const verb = p==="stitch" ? "Design" : "Build";
+  let s = `${verb} a clickable ${type} prototype called "${name}". It will be used for user experience testing.`;
+  if(v("purpose")) s += `\n\nWhat it does: ${v("purpose")}`;
+  if(v("users")) s += `\nTarget users: ${v("users")}`;
+  if(v("story")) s += `\nKey user story: ${v("story")}`;
+  return s;
+}
+
+function onePrompt(){
+  const p = platform(), sc = getScreens(), out=[intro()];
+  if(sc.length){
+    out.push((p==="stitch"?"Screens (keep them consistent as one flow):":"Screens / pages, in user-flow order:")+"\n"+
+      sc.map((s,i)=>`${i+1}. ${s.n||"Screen"}${s.d?" – "+s.d:""}`).join("\n"));
+  }
+  if(v("task")) out.push(`Test task – a tester must be able to complete this from start to finish:\n${v("task")}`);
+  if(v("interactions")) out.push(`These interactions must work:\n${v("interactions")}`);
+  if(p!=="stitch") out.push("Link all screens with working navigation so a tester can move through the whole flow without getting stuck.");
+  const st = styleLines(); if(st.length) out.push("Visual style:\n"+st.map(x=>"- "+x).join("\n"));
+  const r = rules(); if(r.length) out.push("Requirements:\n"+r.map(x=>"- "+x).join("\n"));
+  if(v("extra")) out.push(v("extra"));
+  out.push("Keep it simple and focused on the test task. Leave out features that are not needed for it.");
+  return out.join("\n\n");
+}
+
+function splitPrompts(){
+  const sc = getScreens(), p = platform(), list=[];
+  const first = [intro()];
+  const st = styleLines(); if(st.length) first.push("Visual style:\n"+st.map(x=>"- "+x).join("\n"));
+  const r = rules(); if(r.length) first.push("Requirements:\n"+r.map(x=>"- "+x).join("\n"));
+  if(v("extra")) first.push(v("extra"));
+  if(sc[0]) first.push(`Start with the first screen only: ${sc[0].n}${sc[0].d?" – "+sc[0].d:""}.`);
+  list.push({t:"Prompt 1 – set up + first screen", b:first.join("\n\n")});
+  sc.slice(1).forEach((s,i)=>{
+    let b = `Now add the next screen in the same style: ${s.n||"Screen "+(i+2)}${s.d?" – "+s.d:""}.`;
+    b += `\nIt follows "${sc[i].n||"the previous screen"}" in the flow. Keep the header, navigation, colours and components consistent.`;
+    list.push({t:`Prompt ${i+2} – ${s.n||"next screen"}`, b});
+  });
+  let last = "Connect all the screens so a tester can click through the whole flow.";
+  if(v("task")) last += `\nCheck that this test task can be completed from start to finish:\n${v("task")}`;
+  if(v("interactions")) last += `\nMake sure these interactions work:\n${v("interactions")}`;
+  if(p==="stitch") last += "\nCheck that all the screens look consistent before I export or preview them.";
+  list.push({t:`Prompt ${list.length+1} – link it all together`, b:last});
+  return list;
+}
+
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+
+function build(){
+  const p = platform();
+  $("otherWrap").hidden = p!=="other";
+  $("tip").innerHTML = tips[p];
+  dsHint();
+  const o = $("output");
+  if(mode==="one"){
+    const t = onePrompt();
+    o.innerHTML = `<div class="pblock"><pre class="prompt" id="p0">${esc(t)}</pre>
+      <div class="meta"><span>${t.split(/\s+/).length} words · paste into ${esc(platName())}</span>
+      <button class="btn btn-primary" data-copy="p0">Copy prompt</button></div></div>`;
+  } else {
+    o.innerHTML = splitPrompts().map((x,i)=>`<div class="pblock"><div class="pblock-h"><span>${esc(x.t)}</span>
+      <button class="btn btn-outline btn-sm" data-copy="p${i}">Copy</button></div>
+      <pre class="prompt" id="p${i}">${esc(x.b)}</pre></div>`).join("")+
+      `<div class="meta">Paste these into ${esc(platName())} one at a time. Check each result before sending the next.</div>`;
+  }
+  o.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>copy($(b.dataset.copy).textContent));
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200);
+}
+function copy(text){
+  const done=()=>showToast("Copied to clipboard");
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(fallback); else fallback();
+  function fallback(){const a=document.createElement("textarea");a.value=text;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove();done();}
+}
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected", x===t));
+  mode = t.dataset.mode; build();
+});
+document.addEventListener("input", build);
+document.addEventListener("change", build);
+$("addScreen").onclick=()=>{screenRow();build();};
+$("theme").onclick=()=>{const d=document.documentElement.classList.toggle("dark");try{localStorage.setItem("ppb-theme",d?"dark":"light")}catch(e){}};
+window.addEventListener("storage",e=>{if(e.key==="ppb-theme")document.documentElement.classList.toggle("dark",e.newValue==="dark")});
+$("reset").onclick=()=>{
+  cleanup(true);
+  document.querySelectorAll("input[type=text],textarea").forEach(e=>e.value="");
+  document.querySelectorAll("select").forEach(e=>e.selectedIndex=0);
+  $("screens").innerHTML=""; defaults.forEach(d=>screenRow(...d)); build();
+};
+document.querySelectorAll("input[type=text],textarea").forEach(addMic);
+if(!SR) $("micNote").textContent = "🎙 Voice dictation doesn't work in this browser. Try Chrome, Edge or Safari, or use your device's own dictation (e.g. Windows + H on Windows, or press Fn twice on a Mac).";
+defaults.forEach(d=>screenRow(...d));
+build();
+</script>
+</body>
+</html>

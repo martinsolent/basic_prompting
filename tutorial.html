@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial: Write a prototype prompt – Prototype Prompt Builder</title>
+<style>
+  :root{
+    --background:#ffffff; --foreground:#09090b; --card:#ffffff;
+    --muted:#f4f4f5; --muted-foreground:#71717a; --border:#e4e4e7; --ring:#18181b;
+    --primary:#18181b; --primary-foreground:#fafafa; --secondary:#f4f4f5; --accent:#f4f4f5;
+    --radius:0.5rem;
+  }
+  .dark{
+    --background:#09090b; --foreground:#fafafa; --card:#0c0c0e;
+    --muted:#27272a; --muted-foreground:#a1a1aa; --border:#27272a; --ring:#d4d4d8;
+    --primary:#fafafa; --primary-foreground:#18181b; --secondary:#27272a; --accent:#27272a;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:70px}
+  body{margin:0;background:var(--background);color:var(--foreground);
+    font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  header{border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--background);z-index:5}
+  .bar{max-width:960px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .logo{width:28px;height:28px;border-radius:6px;background:var(--primary);color:var(--primary-foreground);
+    display:grid;place-items:center;font-weight:700;font-size:13px}
+  .bar h1{font-size:15px;font-weight:600;margin:0}
+  .spacer{flex:1}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;
+    border:1px solid var(--border);background:var(--secondary)}
+  .btn{font:inherit;font-size:13px;font-weight:500;border-radius:var(--radius);padding:8px 14px;cursor:pointer;
+    border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;text-decoration:none;outline:none;white-space:nowrap}
+  .btn-primary{background:var(--primary);color:var(--primary-foreground)}
+  .btn-primary:hover{opacity:.9}
+  .btn-outline{background:var(--background);border-color:var(--border);color:var(--foreground)}
+  .btn-outline:hover{background:var(--accent)}
+  .btn-ghost{background:transparent;color:var(--foreground);border-color:transparent}
+  .btn-ghost:hover{background:var(--accent)}
+  .btn:focus-visible,summary:focus-visible,a:focus-visible{box-shadow:0 0 0 2px var(--background),0 0 0 4px var(--ring)}
+
+  main{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+  .hero h2{font-size:32px;letter-spacing:-.02em;line-height:1.2;margin:0 0 8px}
+  .hero p{color:var(--muted-foreground);margin:0 0 24px;font-size:16px;max-width:720px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:calc(var(--radius) + 4px);
+    padding:24px 26px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:18px}
+  .card > :first-child{margin-top:0}
+  .card > :last-child{margin-bottom:0}
+  h2{font-size:21px;margin:0 0 10px;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+  h3{font-size:16px;margin:22px 0 6px}
+  p{margin:8px 0}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin:4px 0}
+  a{color:inherit;text-underline-offset:3px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--muted);
+    border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+  .step{width:28px;height:28px;border-radius:999px;background:var(--secondary);font-size:13px;flex:none;
+    display:grid;place-items:center;font-weight:600;border:1px solid var(--border)}
+  .alert{border:1px solid var(--border);border-left:4px solid var(--foreground);border-radius:var(--radius);
+    padding:10px 16px;background:var(--muted);margin:14px 0}
+  .alert p{margin:4px 0}
+  figure{margin:18px 0;text-align:center}
+  figure img{max-width:100%;height:auto;border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:0 4px 14px rgba(0,0,0,.07);background:#fff}
+  figcaption{font-size:13px;color:var(--muted-foreground);margin-top:6px;font-style:italic}
+  .table-wrap{overflow-x:auto;margin:12px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 12px;border:1px solid var(--border);vertical-align:top}
+  th{background:var(--muted);font-weight:600}
+  details{border:1px solid var(--border);border-radius:var(--radius);margin:14px 0}
+  summary{cursor:pointer;padding:10px 14px;list-style:none;display:flex;justify-content:space-between;border-radius:var(--radius);outline:none}
+  summary::after{content:"+";color:var(--muted-foreground);font-weight:600}
+  details[open] summary::after{content:"–"}
+  details > :not(summary){margin:0 14px 14px}
+  pre{background:var(--muted);border:1px solid var(--border);border-radius:var(--radius);padding:14px;
+    overflow-x:auto;white-space:pre-wrap;font-size:12.5px;line-height:1.55}
+  pre code{background:none;border:0;padding:0;font-size:inherit}
+  .cta{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  .cta h2{margin:0}
+  .cta p{margin:4px 0 0;color:var(--muted-foreground)}
+  footer{text-align:center;color:var(--muted-foreground);font-size:12px;margin-top:24px}
+  .intro-card em{font-style:normal}
+  @media(max-width:640px){.bar h1{font-size:14px}.badge{display:none}.card{padding:18px}}
+</style>
+<script>try{if(localStorage.getItem("ppb-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="logo">P</div>
+    <h1>Prototype Prompt Builder</h1>
+    <span class="badge">Tutorial</span>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" id="theme" aria-label="Toggle dark mode">◐ Theme</button>
+    <a class="btn btn-outline" href="how-to-use.html">📖 How to use</a>
+    <a class="btn btn-primary" href="prototype-prompt-builder.html">Open the builder →</a>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h2>Tutorial: Write a prototype prompt for Google Stitch, Lovable and similar platforms</h2>
+    <p>A step-by-step walkthrough with screenshots, from your research to a prompt that's ready to paste.</p>
+  </div>
+
+<section class="card intro-card"><p>This tutorial shows you how to use the <strong>Prototype Prompt Builder</strong> to turn your UX research into a clear prompt. You then paste the prompt into an AI prototyping platform, such as <strong>Google Stitch</strong> or <strong>Lovable</strong>, to make a clickable prototype for user testing.</p>
+<p>All the screenshots use the same example: <strong>StudySpot</strong>, an app that helps students find a free study room on campus.</p>
+<p><strong>Time needed:</strong> about 20–30 minutes, if your research is ready.</p>
+
+</section>
+<section class="card"><h2 id="step-1"><span class="step">1</span>Before you start</h2>
+<p>The builder <strong>doesn&#39;t do your UX thinking for you</strong>. It asks for things you should already have from earlier work. Before you start, you need:</p>
+<ul>
+<li><strong>User research</strong>: interviews, surveys or observation notes showing a real problem</li>
+<li><strong>At least one persona</strong>: a named user with goals and frustrations, based on your research</li>
+<li><strong>A journey map</strong>: the steps your persona goes through now, with the pain points marked</li>
+<li><strong>User stories</strong>: written as <em>&quot;As a… I want… so that…&quot;</em></li>
+<li><strong>Wireframes</strong>: paper or digital sketches of your main screens and how they link</li>
+</ul>
+<p>Where this fits in the design process:</p>
+<div class="alert">
+<p>Research → Personas → Journey map → User stories → Wireframes → <strong>Prompt + prototype</strong> → User testing → Iterate</p>
+</div>
+<div class="alert">
+<p><strong>Tip:</strong> Keep these documents open beside the builder. You&#39;ll copy from them into almost every box.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-2"><span class="step">2</span>Open the builder</h2>
+<p>Open the Prototype Prompt Builder in <strong>Chrome, Edge or Safari</strong>. These browsers support voice dictation.</p>
+<p>The page has two halves:</p>
+<ul>
+<li><strong>Left:</strong> six numbered steps to fill in.</li>
+<li><strong>Right:</strong> your prompt. It updates as you type.</li>
+</ul>
+<figure><img src="tutorial/images/01-builder-overview.png" alt="The Prototype Prompt Builder with the form on the left and the prompt on the right" loading="lazy"><figcaption>The Prototype Prompt Builder with the form on the left and the prompt on the right</figcaption></figure>
+<div class="alert">
+<p><strong>Note:</strong> The example screens in step 3 (Home, Menu / list…) are only there to show you the format. Replace them with your own.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-3"><span class="step">3</span>Check you&#39;re ready</h2>
+<p>Click <strong>📖 How to use this builder</strong> in the top bar. The instructions open in a new tab, so you won&#39;t lose anything you&#39;ve typed.</p>
+<figure><img src="tutorial/images/02-how-to-use-button.png" alt="The How to use this builder button in the top bar" loading="lazy"><figcaption>The How to use this builder button in the top bar</figcaption></figure>
+<p>At the top of the instructions page, tick off each item you have. If you can&#39;t tick them all, finish your research first. Otherwise the AI will fill the gaps with guesses.</p>
+<figure><img src="tutorial/images/03-before-you-start.png" alt="The &quot;Before you start&quot; checklist on the instructions page, all ticked" loading="lazy"><figcaption>The &quot;Before you start&quot; checklist on the instructions page, all ticked</figcaption></figure>
+<p>Switch back to the builder tab when you&#39;re ready.</p>
+
+</section>
+<section class="card"><h2 id="step-4"><span class="step">4</span>Choose your platform</h2>
+<p>In <strong>step 1</strong>, choose the platform you&#39;ll use:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Choose it when…</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Google Stitch</strong></td>
+<td>You&#39;re designing screens on a canvas. Stitch creates designs you can link and export.</td>
+</tr>
+<tr>
+<td><strong>Lovable</strong></td>
+<td>You want a working web app with real buttons, forms and a shareable link.</td>
+</tr>
+<tr>
+<td><strong>Other</strong></td>
+<td>You&#39;re using a similar platform (Bolt.new, v0, Figma Make…). Type its name in the box.</td>
+</tr>
+</tbody></table></div>
+<p>The wording of your prompt changes to suit the platform, and a <strong>Tips</strong> box appears with advice for that tool.</p>
+<figure><img src="tutorial/images/04-step1-platform.png" alt="Step 1 with Google Stitch selected and the Tips for Google Stitch box" loading="lazy"><figcaption>Step 1 with Google Stitch selected and the Tips for Google Stitch box</figcaption></figure>
+
+</section>
+<section class="card"><h2 id="step-5"><span class="step">5</span>Describe the product</h2>
+<p><strong>Step 2</strong> is the most important part. Take every answer from your research.</p>
+<figure><img src="tutorial/images/05-step2-product.png" alt="Step 2 filled in with the StudySpot example" loading="lazy"><figcaption>Step 2 filled in with the StudySpot example</figcaption></figure>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Box</th>
+<th>What to write</th>
+<th>StudySpot example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>App / product name</strong></td>
+<td>A working name</td>
+<td>StudySpot</td>
+</tr>
+<tr>
+<td><strong>Type of product</strong></td>
+<td>Mobile app, website, dashboard…</td>
+<td>mobile app</td>
+</tr>
+<tr>
+<td><strong>What does it do?</strong></td>
+<td>One or two sentences: <em>who</em> it helps, <em>what</em> they do, <em>why</em> it matters</td>
+<td>Helps students find a free, quiet study space on campus right now and reserve it for up to two hours.</td>
+</tr>
+<tr>
+<td><strong>Target users</strong></td>
+<td>From your persona. Describe their <em>situation</em>, not just their age</td>
+<td>First- and second-year undergraduates who waste time walking between buildings looking for somewhere quiet to work</td>
+</tr>
+<tr>
+<td><strong>Key user story</strong></td>
+<td>The <strong>one</strong> story your prototype must prove works</td>
+<td>As a student with a free hour, I want to see which study rooms are free near me so that I can start working straight away.</td>
+</tr>
+</tbody></table></div>
+<h3>Stuck? Use the hints</h3>
+<p>Next to the harder boxes there&#39;s a <strong>Stuck?</strong> link. It opens help with a fill-in-the-blank pattern and weak and better examples side by side.</p>
+<figure><img src="tutorial/images/06-stuck-hints.png" alt="The &quot;Stuck on What does it do?&quot; hints, with weak and better examples" loading="lazy"><figcaption>The &quot;Stuck on What does it do?&quot; hints, with weak and better examples</figcaption></figure>
+<h3>Speak instead of typing</h3>
+<p>Every box has a <strong>microphone</strong> button. Press it and speak. It turns red while it&#39;s listening. Press it again to stop. Your words are added to anything you&#39;ve already typed.</p>
+<figure><img src="tutorial/images/07-dictation.png" alt="The microphone button turns red while dictating" loading="lazy"><figcaption>The microphone button turns red while dictating</figcaption></figure>
+<div class="alert">
+<p><strong>Microphone not working?</strong> Allow microphone access when the browser asks. If it still doesn&#39;t work, use your computer&#39;s own dictation: <strong>Windows + H</strong> on Windows, or press <strong>Fn</strong> twice on a Mac.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-6"><span class="step">6</span>List your screens</h2>
+<p>In <strong>step 3</strong>, list the screens a user moves through to complete your key user story, <strong>in order</strong>. Use your wireframes. Each step on your journey map often becomes a screen.</p>
+<ul>
+<li><strong>First box:</strong> a simple screen name, e.g. <em>Home</em>, <em>Room list</em>.</li>
+<li><strong>Second box:</strong> the main content and the main button on that screen.</li>
+<li>Use <strong>+ Add screen</strong> to add more, and <strong>✕</strong> to remove one.</li>
+<li>About <strong>3–6 screens</strong> is right. More than that and the result is more likely to be muddled.</li>
+</ul>
+<figure><img src="tutorial/images/08-step3-screens.png" alt="Step 3 with four StudySpot screens listed in order" loading="lazy"><figcaption>Step 3 with four StudySpot screens listed in order</figcaption></figure>
+
+</section>
+<section class="card"><h2 id="step-7"><span class="step">7</span>Write the test task</h2>
+<p>In <strong>step 4</strong>, describe what testers will try to do. The prototype has to let them finish this task.</p>
+<ul>
+<li><strong>Task(s) for testers:</strong> give them a realistic goal, but don&#39;t tell them which buttons to press.</li>
+<li><strong>Interactions that must work:</strong> list every click needed to finish the task, so the AI doesn&#39;t leave dead buttons.</li>
+</ul>
+<figure><img src="tutorial/images/09-step4-task.png" alt="Step 4 with the StudySpot test task and interactions" loading="lazy"><figcaption>Step 4 with the StudySpot test task and interactions</figcaption></figure>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>❌ Gives the answer away</th>
+<th>✅ Better</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Click &quot;Free now&quot;, tap the first room, press &quot;Reserve&quot;.</td>
+<td>You have a free hour before your 2pm seminar. Find a quiet room with plug sockets in the library and reserve it.</td>
+</tr>
+</tbody></table></div>
+
+</section>
+<section class="card"><h2 id="step-8"><span class="step">8</span>Set the look and feel</h2>
+<p>In <strong>step 5</strong>, choose a design system and describe the style using your mood board or brand guidelines.</p>
+<figure><img src="tutorial/images/10-step5-look-stitch.png" alt="Step 5 with Material Design 3 chosen for Google Stitch, showing the &quot;Best fit&quot; hint" loading="lazy"><figcaption>Step 5 with Material Design 3 chosen for Google Stitch, showing the &quot;Best fit&quot; hint</figcaption></figure>
+<h3>Understand your design system first</h3>
+<p>A <strong>design system</strong> is a set of interface components (buttons, inputs, menus, dialogs, tabs and so on) with <strong>guidelines for how and when to use each one</strong>. The AI will place components, but it can&#39;t tell whether it chose the right one. That&#39;s your job. Before you prototype, read your design system&#39;s component pages and its &quot;usage&quot; or &quot;do and don&#39;t&quot; guidance.</p>
+<h3>Read the hint under the menu</h3>
+<p>The hint changes depending on your platform and the system you choose:</p>
+<ul>
+<li><strong>Google Stitch:</strong> every choice is a <em>style hint</em>. Stitch copies the look but draws its own components. <strong>Material Design 3</strong> is the best fit because Stitch is built on it.</li>
+<li><strong>Lovable:</strong> a React-based library (shadcn/ui, Material via MUI, Ant Design, Fluent, Carbon, Bootstrap) gives you <em>real components</em>. shadcn/ui is Lovable&#39;s default.</li>
+<li><strong>Apple Human Interface Guidelines:</strong> a <em>style reference</em> only on both platforms, because it&#39;s guidelines, not code.</li>
+</ul>
+<p>Here&#39;s the same step with <strong>Lovable</strong> and <strong>Ant Design</strong> chosen:</p>
+<figure><img src="tutorial/images/11-step5-look-lovable.png" alt="Step 5 with Lovable and Ant Design, showing the &quot;Real components&quot; hint" loading="lazy"><figcaption>Step 5 with Lovable and Ant Design, showing the &quot;Real components&quot; hint</figcaption></figure>
+<div class="alert">
+<p><strong>Not sure?</strong> Choose <em>Let the platform choose</em> and describe the mood and colours instead.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-9"><span class="step">9</span>Testing and accessibility options</h2>
+<p><strong>Step 6</strong> adds rules that keep the prototype focused and testable. <strong>Leave the ticked options on</strong> unless you have a good reason to change them.</p>
+<figure><img src="tutorial/images/12-step6-testing.png" alt="Step 6 with the testing and accessibility options ticked" loading="lazy"><figcaption>Step 6 with the testing and accessibility options ticked</figcaption></figure>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Realistic sample data</td>
+<td>Testers react to real-looking content, not <em>lorem ipsum</em></td>
+</tr>
+<tr>
+<td>No login, payments or real backend</td>
+<td>Stops the AI wasting time and credits on features you aren&#39;t testing</td>
+</tr>
+<tr>
+<td>WCAG AA colour contrast</td>
+<td>Text and buttons can be read by more people</td>
+</tr>
+<tr>
+<td>Large touch targets (44px+)</td>
+<td>Buttons are easy to tap on a phone</td>
+</tr>
+<tr>
+<td>Clear labels and plain English</td>
+<td>Testers aren&#39;t left guessing what icons mean</td>
+</tr>
+<tr>
+<td>Visible feedback</td>
+<td>Testers can see that their tap did something</td>
+</tr>
+<tr>
+<td>Error / empty state <em>(optional)</em></td>
+<td>Lets you test what happens when things go wrong</td>
+</tr>
+<tr>
+<td>Keyboard accessible <em>(optional)</em></td>
+<td>Important for web apps. Ignored for Stitch</td>
+</tr>
+</tbody></table></div>
+<p>Use <strong>Anything else?</strong> for extra instructions, e.g. <em>&quot;Use a bottom tab bar, not a hamburger menu.&quot;</em></p>
+
+</section>
+<section class="card"><h2 id="step-10"><span class="step">10</span>Read and copy your prompt</h2>
+<p>Look at the <strong>Your prompt</strong> panel on the right. <strong>Read it through.</strong> Does it describe <em>your</em> design? If not, change the boxes on the left. The prompt updates straight away.</p>
+<figure><img src="tutorial/images/13-output-one-prompt.png" alt="The finished StudySpot prompt in the One prompt tab" loading="lazy"><figcaption>The finished StudySpot prompt in the One prompt tab</figcaption></figure>
+<h3>One prompt or screen by screen?</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>One prompt</strong></td>
+<td>Everything in one message. Start with this in <strong>Lovable</strong>.</td>
+</tr>
+<tr>
+<td><strong>Screen by screen</strong></td>
+<td>A set of shorter prompts to paste one at a time. Often works better in <strong>Stitch</strong>, or whenever one big prompt gives a muddled result.</td>
+</tr>
+</tbody></table></div>
+<figure><img src="tutorial/images/14-output-screen-by-screen.png" alt="The Screen by screen tab, split into a setup prompt, one prompt per screen and a final linking prompt" loading="lazy"><figcaption>The Screen by screen tab, split into a setup prompt, one prompt per screen and a final linking prompt</figcaption></figure>
+<h3>Copy it</h3>
+<p>Click <strong>Copy prompt</strong> (or <strong>Copy</strong> next to each block in Screen by screen). A <strong>Copied to clipboard</strong> message appears at the bottom right.</p>
+<figure><img src="tutorial/images/15-copied.png" alt="The Copied to clipboard message after clicking Copy prompt" loading="lazy"><figcaption>The Copied to clipboard message after clicking Copy prompt</figcaption></figure>
+<details>
+<summary><strong>See the full StudySpot prompt</strong></summary><pre><code class="language-text">Design a clickable mobile app prototype called &quot;StudySpot&quot;. It will be used for user experience testing.
+
+What it does: Helps students find a free, quiet study space on campus right now and reserve it for up to two hours.
+Target users: First- and second-year undergraduates who waste time walking between buildings looking for somewhere quiet to work
+Key user story: As a student with a free hour, I want to see which study rooms are free near me so that I can start working straight away.
+
+Screens (keep them consistent as one flow):
+1. Home – &#39;Free now&#39; filter, map/list toggle, nearby buildings
+2. Room list – Rooms with capacity, noise level, plug sockets, free-until time
+3. Room detail – Photo, facilities, &#39;Reserve for 2 hours&#39; button
+4. Confirmation – Room number, reserved-until time, directions button
+
+Test task – a tester must be able to complete this from start to finish:
+You have a free hour before your 2pm seminar. Find a quiet room with plug sockets in the library and reserve it.
+
+These interactions must work:
+Tapping &#39;Free now&#39; filters the list; tapping a room opens its detail; &#39;Reserve&#39; shows the confirmation with a time; &#39;Back&#39; returns to the list.
+
+Visual style:
+- Follow the visual style and usage guidelines of Material Design 3 for components, spacing and typography.
+- Mood: calm, focused, friendly.
+- Colours: navy #1E3A5F with soft teal accents.
+- Use light mode.
+
+Requirements:
+- Use realistic sample content and data that fits the product. Do not use lorem ipsum.
+- This is a prototype for user testing. Do not design login, sign-up or payment screens unless I list them.
+- Text and important controls must meet WCAG 2.2 AA colour contrast.
+- Make tap targets at least 44×44px.
+- Use clear, plain-English labels on every button and field. Do not rely on icons alone.
+- Show clear feedback for actions, such as selected states, loading and success messages.
+- Include at least one empty state or error message that a tester might see.
+
+Keep it simple and focused on the test task. Leave out features that are not needed for it.
+</code></pre>
+</details>
+</section>
+<section class="card"><h2 id="step-11"><span class="step">11</span>Paste it into the platform</h2>
+<h3>Google Stitch</h3>
+<ol>
+<li>Go to <strong>stitch.google.com</strong> and sign in with a Google account.</li>
+<li>Choose <strong>mobile</strong> or <strong>web</strong> to match your product type.</li>
+<li>Paste your prompt into the prompt box. You can also attach a photo of your paper wireframe.</li>
+<li>Send it. Stitch shows your prompt in the chat panel on the left while it generates the screens on the canvas.</li>
+</ol>
+<figure><img src="tutorial/images/16-stitch-generating.png" alt="Google Stitch generating a design after a prompt has been sent" loading="lazy"><figcaption>Google Stitch generating a design after a prompt has been sent</figcaption></figure>
+<p>If you used <strong>Screen by screen</strong>, wait for each screen to finish before pasting the next prompt.</p>
+<h3>Lovable</h3>
+<ol>
+<li>Go to <strong>lovable.dev</strong> and sign in.</li>
+<li>Paste your prompt into the chat box on the home page and send it.</li>
+<li>Wait for the preview to build, then click through it.</li>
+<li>Click <strong>Publish</strong> when you want a link testers can open on their phones.</li>
+</ol>
+<h3>Other platforms</h3>
+<p>Most similar platforms work in the same way: paste the prompt, send it, check the preview. Start with <strong>One prompt</strong>. If the result gets muddled, switch to <strong>Screen by screen</strong>.</p>
+<div class="alert">
+<p><strong>Free plans have limits.</strong> Each message uses up credits. Spend time getting the prompt right in the builder first, because that costs nothing.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-12"><span class="step">12</span>After it generates</h2>
+<ol>
+<li><strong>Try the test task yourself.</strong> Can you finish it without getting stuck?</li>
+<li><strong>Fix one thing per message</strong>, e.g. <em>&quot;Make the &#39;Reserve&#39; button go to the confirmation screen.&quot;</em> Several changes in one message often break other things.</li>
+<li><strong>Check accessibility:</strong> contrast, text size and clear labels.</li>
+<li><strong>Check the components against your design system&#39;s guidelines.</strong> Is each one the right component, used the right way, with all its states?</li>
+<li><strong>Get a shareable link</strong> (Lovable: <em>Publish</em>; Stitch: preview or export) for your testing sessions.</li>
+<li><strong>Test with real users</strong>, write down what happens, and go back to your design.</li>
+</ol>
+<div class="alert">
+<p>The AI can build a prototype, but <strong>only testing with real users</strong> tells you whether it&#39;s useful, usable and valuable.</p>
+</div>
+
+</section>
+<section class="card"><h2 id="step-13"><span class="step">13</span>Common problems</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>The result looks generic and nothing like my wireframes</strong></td>
+<td>Add more detail to the screen descriptions, attach your wireframe image (Stitch), or switch to <em>Screen by screen</em>. Make your <em>What does it do?</em> and <em>Target users</em> answers more specific.</td>
+</tr>
+<tr>
+<td><strong>Buttons don&#39;t do anything</strong></td>
+<td>List them in <em>Interactions that must work</em>, or send a follow-up such as <em>&quot;When I tap &#39;Reserve&#39;, show the confirmation screen.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>It added login screens or a database</strong></td>
+<td>Check <em>No login, payments or real backend</em> is ticked, then send: <em>&quot;Remove the login screen. This is a prototype for user testing only.&quot;</em></td>
+</tr>
+<tr>
+<td><strong>The microphone doesn&#39;t work</strong></td>
+<td>Use Chrome, Edge or Safari, allow microphone access, and open the builder from its web address rather than as a file on your computer. Or use your computer&#39;s own dictation.</td>
+</tr>
+<tr>
+<td><strong>I&#39;ve run out of credits</strong></td>
+<td>Copy your prompt and try another similar platform. Choose <em>Other</em> in step 1 and type its name.</td>
+</tr>
+<tr>
+<td><strong>I lost my work</strong></td>
+<td>The builder doesn&#39;t save automatically. Keep a copy of your prompt in a document before you close the tab.</td>
+</tr>
+</tbody></table></div>
+
+<p><em>Nothing you type into the Prototype Prompt Builder leaves your browser.</em></p>
+</section>
+
+  <section class="card cta">
+    <div>
+      <h2>Ready to try it?</h2>
+      <p>Have your research, persona, journey map and wireframes open, then start building your prompt.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn btn-outline" href="how-to-use.html">📖 How to use</a>
+      <a class="btn btn-primary" href="prototype-prompt-builder.html">Open the builder →</a>
+    </div>
+  </section>
+</main>
+
+<script>
+document.getElementById("theme").onclick = () => {const d=document.documentElement.classList.toggle("dark");try{localStorage.setItem("ppb-theme",d?"dark":"light")}catch(e){}};
+window.addEventListener("storage",e=>{if(e.key==="ppb-theme")document.documentElement.classList.toggle("dark",e.newValue==="dark")});
+</script>
+</body>
+</html>

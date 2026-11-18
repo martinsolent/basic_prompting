@@ -6,7 +6,7 @@ The builder is tuned for **Google Stitch** and **Lovable**, and also supports si
 
 ## Use the builder
 
-Open [`index.html`](index.html) in a modern browser. There is no installation, build step or server-side component.
+Open [Prototype Prompt Builder](https://martinsolent.github.io/basic_prompting/) in a modern browser. There is no installation, build step or server-side component.
 
 Fill in the six steps:
 
